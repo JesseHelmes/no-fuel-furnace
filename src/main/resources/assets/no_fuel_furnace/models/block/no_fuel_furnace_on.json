@@ -1,0 +1,9 @@
+{
+	"parent": "minecraft:block/orientable",
+	"textures": {
+		"front": "no_fuel_furnace:block/no_fuel_furnace_front_on",
+		"side": "no_fuel_furnace:block/no_fuel_furnace_side",
+		"top": "no_fuel_furnace:block/no_fuel_furnace_top",
+		"bottom": "no_fuel_furnace:block/no_fuel_furnace_bottom"
+	}
+}
