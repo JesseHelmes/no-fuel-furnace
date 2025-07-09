@@ -2,12 +2,15 @@ package com.example.no_fuel_furnace.block;
 
 import javax.annotation.Nullable;
 
+import com.example.no_fuel_furnace.blockentity.AbstractNoFuelFurnaceBlockEntity;
 import com.example.no_fuel_furnace.blockentity.NoFuelFurnaceBlockEntity;
 import com.example.no_fuel_furnace.init.BlockEntityInit;
+import com.mojang.serialization.MapCodec;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
@@ -21,6 +24,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class NoFuelFurnaceBlock extends AbstractNoFuelFurnaceBlock {
+	public static final MapCodec<NoFuelFurnaceBlock> CODEC = simpleCodec(NoFuelFurnaceBlock::new);
+
+	@Override
+	public MapCodec<NoFuelFurnaceBlock> codec() {
+		return CODEC;
+	}
+
 	public NoFuelFurnaceBlock(Properties properties) {
 		super(properties);
 	}
@@ -30,15 +40,27 @@ public class NoFuelFurnaceBlock extends AbstractNoFuelFurnaceBlock {
 	}
 
 	@Nullable
-	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState blockState, BlockEntityType<T> blockEntityType) {
-		return createNoFuelFurnaceTicker(level, blockEntityType, BlockEntityInit.NO_FUEL_FURNACE.get());
+	@Override
+	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
+		return createFurnaceTicker(level, blockEntityType, BlockEntityInit.NO_FUEL_FURNACE.get());
 	}
 
 	@Nullable
-	protected static <T extends BlockEntity> BlockEntityTicker<T> createNoFuelFurnaceTicker(Level level, BlockEntityType<T> blockEntityType, BlockEntityType<? extends NoFuelFurnaceBlockEntity> blockEntity) {
-		return !level.isClientSide ? createTickerHelper(blockEntityType, blockEntity, NoFuelFurnaceBlockEntity::serverTick) : null;
+	protected static <T extends BlockEntity> BlockEntityTicker<T> createFurnaceTicker(
+		Level level, BlockEntityType<T> serverType, BlockEntityType<? extends AbstractNoFuelFurnaceBlockEntity> clientType
+	) {
+		return level instanceof ServerLevel serverlevel
+			? createTickerHelper(
+				serverType,
+				clientType,
+				(p_380330_, p_379922_, p_379493_, p_380329_) -> NoFuelFurnaceBlockEntity.serverTick(serverlevel, p_379922_, p_379493_, (NoFuelFurnaceBlockEntity) p_380329_)
+			)
+			: null;
 	}
 
+	/**
+	 * Called to open this furnace's container.
+	 */
 	protected void openContainer(Level level, BlockPos blockPos, Player player) {
 		BlockEntity blockentity = level.getBlockEntity(blockPos);
 		if (blockentity instanceof NoFuelFurnaceBlockEntity) {
@@ -47,6 +69,9 @@ public class NoFuelFurnaceBlock extends AbstractNoFuelFurnaceBlock {
 		}
 	}
 
+	/**
+	 * Called periodically clientside on blocks near the player to show effects (like furnace fire particles).
+	 */
 	public void animateTick(BlockState blockState, Level level, BlockPos blockPos, RandomSource source) {
 		if (blockState.getValue(LIT)) {
 			double d0 = (double)blockPos.getX() + 0.5D;

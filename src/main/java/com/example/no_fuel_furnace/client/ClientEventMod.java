@@ -4,16 +4,15 @@ import com.example.no_fuel_furnace.NoFuelFurnaceMod;
 import com.example.no_fuel_furnace.client.screen.NoFuelFurnaceScreen;
 import com.example.no_fuel_furnace.init.MenuInit;
 
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
-@Mod.EventBusSubscriber(modid = NoFuelFurnaceMod.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = NoFuelFurnaceMod.MODID, value = Dist.CLIENT)
 public class ClientEventMod {
-	public static void init(final FMLClientSetupEvent event) {
-		event.enqueueWork(() -> {
-			MenuScreens.register(MenuInit.NO_FUEL_FURNACE.get(), NoFuelFurnaceScreen::new);
-		});
+	@SubscribeEvent
+	public static void registerScreens(RegisterMenuScreensEvent event) {
+		event.register(MenuInit.NO_FUEL_FURNACE.get(), NoFuelFurnaceScreen::new);
 	}
 }

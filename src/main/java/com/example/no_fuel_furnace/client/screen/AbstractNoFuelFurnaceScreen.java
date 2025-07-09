@@ -1,113 +1,69 @@
 package com.example.no_fuel_furnace.client.screen;
 
+import java.util.List;
+
 import com.example.no_fuel_furnace.menu.AbstractNoFuelFurnaceMenu;
+import  com.example.no_fuel_furnace.client.screen.recipebook.NoFuelFurnaceRecipeBookComponent;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.ImageButton;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.screens.recipebook.AbstractFurnaceRecipeBookComponent;
+import net.minecraft.client.gui.navigation.ScreenPosition;
+import net.minecraft.client.gui.screens.inventory.AbstractRecipeBookScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
-import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.ClickType;
-import net.minecraft.world.inventory.Slot;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
 // copy of AbstractFurnaceScreen
-@OnlyIn(Dist.CLIENT)
-public abstract class AbstractNoFuelFurnaceScreen <T extends AbstractNoFuelFurnaceMenu> extends AbstractContainerScreen<T> implements RecipeUpdateListener {
-	private static final ResourceLocation RECIPE_BUTTON_LOCATION = new ResourceLocation("textures/gui/recipe_button.png");
-	public final AbstractFurnaceRecipeBookComponent recipeBookComponent;
-	private boolean widthTooNarrow;
-	private final ResourceLocation texture;
+public abstract class AbstractNoFuelFurnaceScreen <T extends AbstractNoFuelFurnaceMenu> extends AbstractRecipeBookScreen<T> {
+    private final ResourceLocation texture;
+    private final ResourceLocation litProgressSprite;
+    private final ResourceLocation burnProgressSprite;
 
-	public AbstractNoFuelFurnaceScreen(T menu, AbstractFurnaceRecipeBookComponent p_97826_, Inventory inventory, Component component, ResourceLocation texture) {
-		super(menu, inventory, component);
-		this.recipeBookComponent = p_97826_;
-		this.texture = texture;
+	public AbstractNoFuelFurnaceScreen(
+        T menu,
+        Inventory playerInventory,
+        Component title,
+        Component recipeFilterName,
+        ResourceLocation texture,
+        ResourceLocation litProgressSprite,
+        ResourceLocation burnProgressSprite,
+        List<RecipeBookComponent.TabInfo> tabInfos
+	) {
+        super(menu, new NoFuelFurnaceRecipeBookComponent(menu, recipeFilterName, tabInfos), playerInventory, title);
+        this.texture = texture;
+        this.litProgressSprite = litProgressSprite;
+        this.burnProgressSprite = burnProgressSprite;
 	}
 
-	public void init() {
-		super.init();
-		this.widthTooNarrow = this.width < 379;
-		this.recipeBookComponent.init(this.width, this.height, this.minecraft, this.widthTooNarrow, this.menu);
-		this.leftPos = this.recipeBookComponent.updateScreenPosition(this.width, this.imageWidth);
-		this.addRenderableWidget(new ImageButton(this.leftPos + 20, this.height / 2 - 49, 20, 18, 0, 0, 19, RECIPE_BUTTON_LOCATION, (p_289628_) -> {
-			this.recipeBookComponent.toggleVisibility();
-			this.leftPos = this.recipeBookComponent.updateScreenPosition(this.width, this.imageWidth);
-			p_289628_.setPosition(this.leftPos + 20, this.height / 2 - 49);
-		}));
-		this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
-	}
+    @Override
+    public void init() {
+        super.init();
+        this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
+    }
 
-	public void containerTick() {
-		super.containerTick();
-		this.recipeBookComponent.tick();
-	}
+    @Override
+    protected ScreenPosition getRecipeBookButtonPosition() {
+        return new ScreenPosition(this.leftPos + 20, this.height / 2 - 49);
+    }
 
-	public void render(GuiGraphics p_282573_, int p_97859_, int p_97860_, float p_97861_) {
-		this.renderBackground(p_282573_);
-		if (this.recipeBookComponent.isVisible() && this.widthTooNarrow) {
-			this.renderBg(p_282573_, p_97861_, p_97859_, p_97860_);
-			this.recipeBookComponent.render(p_282573_, p_97859_, p_97860_, p_97861_);
-		} else {
-			this.recipeBookComponent.render(p_282573_, p_97859_, p_97860_, p_97861_);
-			super.render(p_282573_, p_97859_, p_97860_, p_97861_);
-			this.recipeBookComponent.renderGhostRecipe(p_282573_, this.leftPos, this.topPos, true, p_97861_);
-		}
-
-		this.renderTooltip(p_282573_, p_97859_, p_97860_);
-		this.recipeBookComponent.renderTooltip(p_282573_, this.leftPos, this.topPos, p_97859_, p_97860_);
-	}
-
-	protected void renderBg(GuiGraphics p_282928_, float p_281631_, int p_281252_, int p_281891_) {
+    @Override
+    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
 		int i = this.leftPos;
 		int j = this.topPos;
-		p_282928_.blit(this.texture, i, j, 0, 0, this.imageWidth, this.imageHeight);
+		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, this.texture, i, j, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 256, 256);
 		if (this.menu.isLit()) {
-			int k = this.menu.getLitProgress();
-			int ingredientOffsetFromOrignal = 17;
-			p_282928_.blit(this.texture, i + 56, j + 36 + 12 - k + ingredientOffsetFromOrignal, 176, 12 - k, 14, k + 1);
+            int k = 14;
+            int l = Mth.ceil(this.menu.getLitProgress() * 13.0F) + 1;
+         // Offset to move the input from minecraft orignal place
+            int ingredientOffsetFromOrignal = 17;
+			guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.litProgressSprite, 14, 14, 0, 14 - l, i + 56, j + 36 + 14 - l + ingredientOffsetFromOrignal, 14, l);
 		}
 
-		int l = this.menu.getBurnProgress();
-		p_282928_.blit(this.texture, i + 79, j + 34, 176, 14, l + 1, 16);
+		int i1 = 24;
+        int j1 = Mth.ceil(this.menu.getBurnProgress() * 24.0F);
+        guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.burnProgressSprite, 24, 16, 0, 0, i + 79, j + 34, j1, 16);
 	}
 
-	public boolean mouseClicked(double p_97834_, double p_97835_, int p_97836_) {
-		if (this.recipeBookComponent.mouseClicked(p_97834_, p_97835_, p_97836_)) {
-			return true;
-		} else {
-			return this.widthTooNarrow && this.recipeBookComponent.isVisible() ? true : super.mouseClicked(p_97834_, p_97835_, p_97836_);
-		}
-	}
-
-	protected void slotClicked(Slot p_97848_, int p_97849_, int p_97850_, ClickType p_97851_) {
-		super.slotClicked(p_97848_, p_97849_, p_97850_, p_97851_);
-		this.recipeBookComponent.slotClicked(p_97848_);
-	}
-
-	public boolean keyPressed(int p_97844_, int p_97845_, int p_97846_) {
-		return this.recipeBookComponent.keyPressed(p_97844_, p_97845_, p_97846_) ? false : super.keyPressed(p_97844_, p_97845_, p_97846_);
-	}
-
-	protected boolean hasClickedOutside(double p_97838_, double p_97839_, int p_97840_, int p_97841_, int p_97842_) {
-		boolean flag = p_97838_ < (double)p_97840_ || p_97839_ < (double)p_97841_ || p_97838_ >= (double)(p_97840_ + this.imageWidth) || p_97839_ >= (double)(p_97841_ + this.imageHeight);
-		return this.recipeBookComponent.hasClickedOutside(p_97838_, p_97839_, this.leftPos, this.topPos, this.imageWidth, this.imageHeight, p_97842_) && flag;
-	}
-
-	public boolean charTyped(char p_97831_, int p_97832_) {
-		return this.recipeBookComponent.charTyped(p_97831_, p_97832_) ? true : super.charTyped(p_97831_, p_97832_);
-	}
-
-	public void recipesUpdated() {
-		this.recipeBookComponent.recipesUpdated();
-	}
-
-	public RecipeBookComponent getRecipeBookComponent() {
-		return this.recipeBookComponent;
-	}
 }

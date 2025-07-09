@@ -1,0 +1,6 @@
+{
+	"model": {
+		"type": "minecraft:model",
+		"model": "no_fuel_furnace:item/no_fuel_furnace"
+	}
+}

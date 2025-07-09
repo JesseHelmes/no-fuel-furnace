@@ -1,20 +1,32 @@
 package com.example.no_fuel_furnace.client.screen;
 
-import com.example.no_fuel_furnace.NoFuelFurnaceMod;
-import com.example.no_fuel_furnace.menu.AbstractNoFuelFurnaceMenu;
+import java.util.List;
 
-import net.minecraft.client.gui.screens.recipebook.SmeltingRecipeBookComponent;
+import com.example.no_fuel_furnace.NoFuelFurnaceMod;
+import com.example.no_fuel_furnace.menu.NoFuelFurnaceMenu;
+
+import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
+import net.minecraft.client.gui.screens.recipebook.SearchRecipeBookCategory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.RecipeBookCategories;
 
-@OnlyIn(Dist.CLIENT)
-public class NoFuelFurnaceScreen extends AbstractNoFuelFurnaceScreen<AbstractNoFuelFurnaceMenu> {
-	private static final ResourceLocation TEXTURE = new ResourceLocation(NoFuelFurnaceMod.MODID, "textures/gui/no_fuel_furnace.png");
+public class NoFuelFurnaceScreen extends AbstractNoFuelFurnaceScreen<NoFuelFurnaceMenu> {
+	private static final ResourceLocation LIT_PROGRESS_SPRITE = ResourceLocation.withDefaultNamespace("container/furnace/lit_progress");
+    private static final ResourceLocation BURN_PROGRESS_SPRITE = ResourceLocation.withDefaultNamespace("container/furnace/burn_progress");
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(NoFuelFurnaceMod.MODID, "textures/gui/no_fuel_furnace.png");
+    private static final Component FILTER_NAME = Component.translatable("gui.recipebook.toggleRecipes.smeltable");
+    private static final List<RecipeBookComponent.TabInfo> TABS = List.of(
+        new RecipeBookComponent.TabInfo(SearchRecipeBookCategory.FURNACE),
+        new RecipeBookComponent.TabInfo(Items.PORKCHOP, RecipeBookCategories.FURNACE_FOOD),
+        new RecipeBookComponent.TabInfo(Items.STONE, RecipeBookCategories.FURNACE_BLOCKS),
+        new RecipeBookComponent.TabInfo(Items.LAVA_BUCKET, Items.EMERALD, RecipeBookCategories.FURNACE_MISC)
+    );
 
-	public NoFuelFurnaceScreen(AbstractNoFuelFurnaceMenu menu, Inventory inventory, Component component) {
-		super(menu, new SmeltingRecipeBookComponent(), inventory, component, TEXTURE);
-	}
+    public NoFuelFurnaceScreen(NoFuelFurnaceMenu menu, Inventory playerInventory, Component title) {
+        super(menu, playerInventory, title, FILTER_NAME, TEXTURE, LIT_PROGRESS_SPRITE, BURN_PROGRESS_SPRITE, TABS);
+    }
+	
 }
